@@ -2,12 +2,12 @@
     'name': 'Runbot',
     'category': 'Website',
     'summary': 'Runbot',
-    'version': '1.2',
+    'version': '1.3',
     'description': "Runbot",
     'author': 'OpenERP SA',
     'depends': ['website'],
     'external_dependencies': {
-        'python': ['matplotlib'],
+        'python': ['matplotlib', 'simplejson'],
     },
     'data': [
         'runbot.xml',
