@@ -19,18 +19,18 @@
 #
 ##############################################################################
 
-from openerp.osv import fields, osv
+from openerp import models, fields, api
 
-class runbot_config_settings(osv.osv_memory):
+
+class RunbotConfigSettings(models.Model):
     _name = 'runbot.config.settings'
     _inherit = 'res.config.settings'
-    _columns = {
-    	'default_workers': fields.integer('Total Number of Workers'),
-        'default_running_max': fields.integer('Maximum Number of Running Builds'),
-        'default_timeout': fields.integer('Default Timeout (in seconds)'),
-        'default_starting_port': fields.integer('Starting Port for Running Builds'),
-        'default_domain': fields.char('Runbot Domain'),
-    }
+
+    default_workers = fields.Integer('Total Number of Workers')
+    default_running_max = fields.Integer('Maximum Number of Running Builds')
+    default_timeout = fields.Integer('Default Timeout (in seconds)')
+    default_starting_port = fields.Integer('Starting Port for Running Builds')
+    default_domain = fields.char('Runbot Domain')
 
     def get_default_parameters(self, cr, uid, fields, context=None):
         icp = self.pool['ir.config_parameter']
@@ -55,6 +55,3 @@ class runbot_config_settings(osv.osv_memory):
         icp.set_param(cr, uid, 'runbot.timeout', config.default_timeout)
         icp.set_param(cr, uid, 'runbot.starting_port', config.default_starting_port)
         icp.set_param(cr, uid, 'runbot.domain', config.default_domain)
-
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
