@@ -404,54 +404,6 @@ class runbot_repo(osv.osv):
         self.scheduler(cr, uid, ids, context=context)
         self.reload_nginx(cr, uid, context=context)
 
-class runbot_branch(osv.osv):
-    _name = "runbot.branch"
-    _order = 'name'
-
-    def _get_branch_name(self, cr, uid, ids, field_name, arg, context=None):
-        r = {}
-        for branch in self.browse(cr, uid, ids, context=context):
-            r[branch.id] = branch.name.split('/')[-1]
-        return r
-
-    def _get_pull_head_name(self, cr, uid, ids, field_name, arg, context=None):
-        r = dict.fromkeys(ids, False)
-        for bid in ids:
-            pi = self._get_pull_info(cr, uid, [bid], context=context)
-            if pi:
-                r[bid] = pi['head']['ref']
-        return r
-
-    def _get_branch_url(self, cr, uid, ids, field_name, arg, context=None):
-        r = {}
-        for branch in self.browse(cr, uid, ids, context=context):
-            if re.match('^[0-9]+$', branch.branch_name):
-                r[branch.id] = "https://%s/pull/%s" % (branch.repo_id.base, branch.branch_name)
-            else:
-                r[branch.id] = "https://%s/tree/%s" % (branch.repo_id.base, branch.branch_name)
-        return r
-
-    _columns = {
-        'repo_id': fields.many2one('runbot.repo', 'Repository', required=True, ondelete='cascade', select=1),
-        'name': fields.char('Ref Name', required=True),
-        'branch_name': fields.function(_get_branch_name, type='char', string='Branch', readonly=1, store=True),
-        'branch_url': fields.function(_get_branch_url, type='char', string='Branch url', readonly=1),
-        'pull_head_name': fields.function(_get_pull_head_name, type='char', string='PR HEAD name', readonly=1, store=True),
-        'sticky': fields.boolean('Sticky', select=1),
-        'coverage': fields.boolean('Coverage'),
-        'state': fields.char('Status'),
-        'modules': fields.char("Modules to Install", help="Comma-separated list of modules to install and test."),
-        'job_timeout': fields.integer('Job Timeout (minutes)', help='For default timeout: Mark it zero'),
-    }
-
-    def _get_pull_info(self, cr, uid, ids, context=None):
-        assert len(ids) == 1
-        branch = self.browse(cr, uid, ids[0], context=context)
-        repo = branch.repo_id
-        if repo.token and branch.name.startswith('refs/pull/'):
-            pull_number = branch.name[len('refs/pull/'):]
-            return repo.github('/repos/:owner/:repo/pulls/%s' % pull_number, ignore_errors=True) or {}
-        return {}
 
 class runbot_build(osv.osv):
     _name = "runbot.build"

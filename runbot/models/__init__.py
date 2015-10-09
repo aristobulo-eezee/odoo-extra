@@ -1,2 +1,3 @@
 import res_config
 import runbot
+import runbot_branch
