@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-
         <record id="view_runbot_configuration" model="ir.ui.view">
             <field name="name">Configure Runbot</field>
             <field name="model">runbot.config.settings</field>
@@ -41,6 +40,7 @@
                 </form>
             </field>
         </record>
+
         <record id="action_runbot_configuration" model="ir.actions.act_window">
             <field name="name">Configure Runbot</field>
             <field name="type">ir.actions.act_window</field>
@@ -48,8 +48,8 @@
             <field name="view_mode">form</field>
             <field name="target">inline</field>
         </record>
-        <menuitem id="menu_runbot_configuration" name="Runbot" parent="base.menu_config"
-            sequence="19" action="action_runbot_configuration"/>
 
+        <menuitem id="menu_runbot_configuration" name="Settings" parent="menu_runbot_top"
+            sequence="30" action="action_runbot_configuration"/>
     </data>
 </openerp>
