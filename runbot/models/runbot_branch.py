@@ -9,8 +9,8 @@ class RunbotBranch(models.Model):
     _order = 'name'
 
     # Fields
-    repo_id = fields.Many2one('runbot.repo', 'Repository', required=True,
-                              ondelete='cascade', select=1)
+    repo_id = fields.Many2one('runbot.repo', string='Repository',
+                              required=True, ondelete='cascade', select=1)
     name = fields.Char('Ref Name', required=True)
     branch_name = fields.Char(compute='_get_branch_name', string='Branch',
                               readonly=1, store=True)

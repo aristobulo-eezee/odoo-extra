@@ -10,11 +10,14 @@
         'python': ['matplotlib', 'simplejson'],
     },
     'data': [
-        'views/runbot.xml',
-        'views/res_config_view.xml',
         'security/runbot_security.xml',
         'security/ir.model.access.csv',
         'security/ir.rule.csv',
+        'views/runbot.xml',
+        'views/runbot_repo_view.xml',
+        'views/runbot_branch_view.xml',
+        'views/runbot_build_view.xml',
+        'views/res_config_view.xml',
     ],
     'installable': True,
 }
