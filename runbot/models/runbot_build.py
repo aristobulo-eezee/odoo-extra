@@ -197,7 +197,7 @@ class RunbotBuild(models.Model):
 
         sort_by_repo = lambda d: (target_repo_ids.index(d['repo_id'][0]), -1 *
                                   len(d.get('branch_name', '')), -1 * d['id'])
-        result_for = lambda d: (d['repo_id'][0], d['name'])
+        result_for = lambda d: (d['repo_id'][0], d['name'], 'exact')
 
         # 1. same name, not a PR
         domain = [
@@ -263,7 +263,7 @@ class RunbotBuild(models.Model):
             if common_refs:
                 b = sorted(common_refs.iteritems(), key=operator.itemgetter(1),
                            reverse=True)[0][0]
-                return target_id, b
+                return target_id, b, 'fuzzy'
 
         # 5. last-resort value
         return target_repo_id, 'master'
@@ -329,7 +329,7 @@ class RunbotBuild(models.Model):
                                   build.dest, modules_to_test)
 
                 for extra_repo in build.repo_id.dependency_ids:
-                    repo, closest_name = extra_repo._get_closest_branch_name()
+                    repo, closest_name, server_match = extra_repo._get_closest_branch_name()
                     repo.git_export(closest_name, build.path())
 
                 # Finally mark all addons to move to openerp/addons
@@ -363,7 +363,9 @@ class RunbotBuild(models.Model):
                 modules_to_test, set(available_modules), explicit_modules)
             _logger.debug("modules_to_test for build %s: %s", build.dest,
                           modules_to_test)
-            build.write({'modules': ','.join(modules_to_test)})
+            build.write({
+                'server_match': server_match,
+                'modules': ','.join(modules_to_test)})
 
     def pg_dropdb(self, dbname):
         run(['dropdb', dbname])

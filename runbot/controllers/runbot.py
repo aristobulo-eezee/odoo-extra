@@ -235,6 +235,7 @@ class RunbotController(http.Controller):
             'host': real_build.host,
             'port': real_build.port,
             'subject': build.subject,
+            'server_match': real_build.server_match,
         }
 
     @http.route([
