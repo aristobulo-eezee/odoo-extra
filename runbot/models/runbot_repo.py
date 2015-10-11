@@ -38,12 +38,6 @@ class RunbotRepo(models.Model):
     duplicate_id = fields.Many2one('runbot.repo', string='Duplicate repo',
                                    help='Repository for finding duplicate '
                                         'builds')
-    server_match = fields.Selection([
-        ('builtin', 'This branch includes Odoo server'),
-        ('exact', 'PR target or matching name prefix found'),
-        ('fuzzy', 'Fuzzy - common ancestor found'),
-        ('default', 'No match found - defaults to master')],
-        string='Server branch matching')
     modules = fields.Char("Modules to install",
                           help="Comma-separated list of modules to install "
                                "and test.")

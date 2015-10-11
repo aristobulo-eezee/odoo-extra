@@ -78,6 +78,12 @@ class RunbotBuild(models.Model):
     job_age = fields.Integer(compute='_get_age', string='Job age')
     duplicate_id = fields.Many2one('runbot.build',
                                    string='Corresponding Build')
+    server_match = fields.Selection([
+        ('builtin', 'This branch includes Odoo server'),
+        ('exact', 'PR target or matching name prefix found'),
+        ('fuzzy', 'Fuzzy - common ancestor found'),
+        ('default', 'No match found - defaults to master')],
+        string='Server branch matching')
 
     @api.depends('name', 'branch_id', 'branch_id.name')
     def _get_dest(self):
@@ -107,9 +113,9 @@ class RunbotBuild(models.Model):
         domain = self.env['runbot.repo'].domain()
         for build in self:
             if build.repo_id.nginx:
-                self.domain = "%s.%s" % (build.dest, build.host)
+                build.domain = "%s.%s" % (build.dest, build.host)
             else:
-                self.domain = "%s:%s" % (domain, build.port)
+                build.domain = "%s:%s" % (domain, build.port)
 
     @api.model
     @api.returns('self', lambda value: value.id)
@@ -578,7 +584,9 @@ class RunbotBuild(models.Model):
 
     @api.multi
     def force(self):
-        """Force a rebuild"""
+        """Force a rebuild
+        :return runbot.repo record (used by controller at /build/<id>/force)
+        """
         for build in self:
             domain = [('state', '=', 'pending')]
             pending = self.search(domain, order='id', limit=1)
@@ -608,6 +616,7 @@ class RunbotBuild(models.Model):
                     'modules': build.modules,
                 }
                 self.sudo().create(new_build)
+        return build.repo_id
 
     @api.multi
     def schedule(self):
