@@ -165,15 +165,17 @@ class RunbotRepo(models.Model):
             run(['git', 'clone', '--bare', self.name, self.path])
 
         # check for mode == hook
-        fetch_time = os.path.getmtime(os.path.join(self.path, 'FETCH_HEAD'))
-        if self.mode == 'hook' and self.hook_time and \
-                dt2time(self.hook_time) < fetch_time:
-            t0 = time.time()
-            _logger.debug('repo %s skip hook fetch fetch_time: %ss ago '
-                          'hook_time: %ss ago',
-                          self.name, int(t0 - fetch_time),
-                          int(t0 - dt2time(self.hook_time)))
-            return
+        fname_fetch_head = os.path.join(self.path, 'FETCH_HEAD')
+        if os.path.isfile(fname_fetch_head):
+            fetch_time = os.path.getmtime(fname_fetch_head)
+            if self.mode == 'hook' and self.hook_time and \
+                    dt2time(self.hook_time) < fetch_time:
+                t0 = time.time()
+                _logger.debug('repo %s skip hook fetch fetch_time: %ss ago '
+                              'hook_time: %ss ago',
+                              self.name, int(t0 - fetch_time),
+                              int(t0 - dt2time(self.hook_time)))
+                return
 
         self.git(['gc', '--auto', '--prune=all'])
         self.git(['fetch', '-p', 'origin', '+refs/heads/*:refs/heads/*'])
