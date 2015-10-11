@@ -2,6 +2,7 @@
 
 from openerp import http
 from openerp.http import request
+from openerp.fields import Datetime
 from openerp.addons.website.models.website import slug
 from openerp.addons.website_sale.controllers.main import QueryURL
 from openerp.addons.runbot.tools.helpers import flatten, uniq_list, s2human
@@ -139,9 +140,16 @@ class RunbotController(http.Controller):
 
         return request.render("runbot.repo", context)
 
-    @http.route(['/runbot/sticky-dashboard'],
+    @http.route(['/runbot', '/runbot/hook/<repo_id:int>'],
                 type='http', auth="public", website=True)
-    def sticky_dashboard(self, refresh=None):
+    def repo(self, repo_id=None, **post):
+        repo = request.env['runbot.repo'].sudo().browse(repo_id)
+        repo.hook_time = Datetime.now()
+        return ""
+
+    @http.route(['/runbot/dashboard'],
+                type='http', auth="public", website=True)
+    def dashboard(self, refresh=None):
         env, cr = request.env, request.cr
         Build = env['runbot.build']
         repos = env['runbot.repo'].search([])   # respect record rules

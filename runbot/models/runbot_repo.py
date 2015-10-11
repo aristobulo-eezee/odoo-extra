@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
-from openerp import models, fields, api
-from openerp.addons.runbot.tools.helpers import fqdn, run, decode_utf, mkdirs
+from openerp import models, fields, api, _
+from openerp.addons.runbot.tools.helpers import (
+    fqdn, run, decode_utf, mkdirs, dt2time)
 from openerp.tools import config
 
 import re
@@ -24,11 +25,14 @@ class RunbotRepo(models.Model):
     name = fields.Char('Repository', required=True)
     path = fields.Char(compute='_get_path', string='Directory', readonly=1)
     base = fields.Char(compute='_get_base', string='Base URL', readonly=1)
-    testing = fields.Integer('Concurrent Testing', deprecated=True)
-    running = fields.Integer('Concurrent Running', deprecated=True)
-    jobs = fields.Char('Jobs', deprecated=True)
     nginx = fields.Boolean('Nginx')
     auto = fields.Boolean('Auto', default=True)
+    mode = fields.Selection([
+        ('disabled', _('Dont check for new build')),
+        ('poll', _('Poll git repository')),
+        ('hook', _('Wait for webhook on /runbot/hook/<id>'))],
+        string='Mode', default='poll')
+    hook_time = fields.Datetime('Last hook time')
     duplicate_id = fields.Many2one('runbot.repo', string='Duplicate repo',
                                    help='Repository for finding duplicate '
                                         'builds')
@@ -151,11 +155,16 @@ class RunbotRepo(models.Model):
             os.makedirs(self.path)
         if not os.path.isdir(os.path.join(self.path, 'refs')):
             run(['git', 'clone', '--bare', self.name, self.path])
-        else:
-            self.git(['gc', '--auto', '--prune=all'])
-            self.git(['fetch', '-p', 'origin', '+refs/heads/*:refs/heads/*'])
-            self.git(['fetch', '-p', 'origin',
-                      '+refs/pull/*/head:refs/pull/*'])
+
+        # check for mode == hook
+        fetch_time = os.path.getmtime(os.path.join(self.path, 'FETCH_HEAD'))
+        if self.mode == 'hook' and self.hook_time and \
+                dt2time(self.hook_time) < fetch_time:
+            return
+
+        self.git(['gc', '--auto', '--prune=all'])
+        self.git(['fetch', '-p', 'origin', '+refs/heads/*:refs/heads/*'])
+        self.git(['fetch', '-p', 'origin', '+refs/pull/*/head:refs/pull/*'])
 
         fields_name = [
             'refname', 'objectname', 'committerdate:iso8601', 'authorname',
@@ -307,7 +316,7 @@ class RunbotRepo(models.Model):
 
     @api.model
     def cron(self):
-        repos = self.search([('auto', '=', True)])
+        repos = self.search([('mode', '!=', 'disabled')])
         repos.update()
         repos.scheduler()
         self.reload_nginx()
