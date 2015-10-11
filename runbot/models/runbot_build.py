@@ -316,6 +316,7 @@ class RunbotBuild(models.Model):
                 shutil.move(build.path('bin'), build.server())
 
             has_server = os.path.isfile(build.server('__init__.py'))
+            server_match = 'builtin'
 
             # build complete set of modules to install
             modules_to_move = []
