@@ -250,7 +250,7 @@ class RunbotBuild(models.Model):
             """, [repo.id, target_id])
             for common_name, in self.env.cr.fetchall():
                 try:
-                    commit = repo.git(['merge-base', branch.name,
+                    commit = repo.git(['merge-base', branch['name'],
                                        common_name]).strip()
                     cmd = ['log', '-1', '--format=%cd', '--date=iso', commit]
                     common_refs[common_name] = repo.git(cmd).strip()
