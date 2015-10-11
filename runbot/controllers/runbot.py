@@ -138,11 +138,11 @@ class RunbotController(http.Controller):
                                       ('host', '=', result['host'])]),
                 })
 
-        return request.render("runbot.repo", context)
+        return request.render('runbot.repo', context)
 
-    @http.route(['/runbot/hook/<repo_id:int>'],
+    @http.route(['/runbot/hook/<int:repo_id>'],
                 type='http', auth="public", website=True)
-    def repo(self, repo_id=None, **post):
+    def hook(self, repo_id=None, **post):
         # TODO: if repo_id == None parse the json['repository']['ssh_url']
         # and find the right repo
         repo = request.env['runbot.repo'].sudo().browse(repo_id)
@@ -167,7 +167,7 @@ class RunbotController(http.Controller):
                        WHERE br.sticky
                          AND br.repo_id in %s
                     ORDER BY br.repo_id, br.branch_name, bu.id DESC
-                   """, [tuple(repos.ids())])
+                   """, [tuple(repos.ids)])
 
         builds = Build.browse(map(operator.itemgetter(0), cr.fetchall()))
 
@@ -239,7 +239,7 @@ class RunbotController(http.Controller):
         }
 
     @http.route([
-        '/runbot/build/<build_id>'], type='http', auth="public", website=True)
+        '/runbot/build/<int:build_id>'], type='http', auth='public', website=True)
     def build(self, build_id=None, search=None, **post):
         env = request.env
 
@@ -272,15 +272,15 @@ class RunbotController(http.Controller):
             'logs': logs,
             'other_builds': other_builds
         }
-        return request.render("runbot.build", context)
+        return request.render('runbot.build', context)
 
     @http.route([
-        '/runbot/build/<build_id>/force'],
-        type='http', auth="public", methods=['POST'])
+        '/runbot/build/<int:build_id>/force'],
+        type='http', auth='public', methods=['GET'])
     def build_force(self, build_id, **post):
         env = request.env
-        repo_id = env['runbot.build'].force(build_id)
-        return request.redirect('/runbot/repo/%s' % repo_id)
+        repo_id = env['runbot.build'].browse(build_id).force()
+        return werkzeug.redirect('/runbot/repo/%s' % repo_id.id)
 
     @http.route([
         '/runbot/badge/<int:repo_id>/<branch>.svg',
@@ -398,4 +398,4 @@ class RunbotController(http.Controller):
                         else ''))
         else:
             return request.not_found()
-        return request.redirect(url)
+        return werkzeug.redirect(url)
