@@ -13,6 +13,7 @@ import simplejson
 import dateutil
 import datetime
 import signal
+from datetime import time
 
 _logger = logging.getLogger(__name__)
 
@@ -26,12 +27,13 @@ class RunbotRepo(models.Model):
     path = fields.Char(compute='_get_path', string='Directory', readonly=1)
     base = fields.Char(compute='_get_base', string='Base URL', readonly=1)
     nginx = fields.Boolean('Nginx')
-    auto = fields.Boolean('Auto', default=True)
     mode = fields.Selection([
         ('disabled', _('Dont check for new build')),
         ('poll', _('Poll git repository')),
-        ('hook', _('Wait for webhook on /runbot/hook/<id>'))],
-        string='Mode', default='poll')
+        ('hook', _('Hook'))],
+        string='Mode', required=True, default='poll',
+        help="hook: Wait for webhook on /runbot/hook/<id> "
+             "i.e. github push event")
     hook_time = fields.Datetime('Last hook time')
     duplicate_id = fields.Many2one('runbot.repo', string='Duplicate repo',
                                    help='Repository for finding duplicate '
@@ -160,6 +162,11 @@ class RunbotRepo(models.Model):
         fetch_time = os.path.getmtime(os.path.join(self.path, 'FETCH_HEAD'))
         if self.mode == 'hook' and self.hook_time and \
                 dt2time(self.hook_time) < fetch_time:
+            t0 = time.time()
+            _logger.debug('repo %s skip hook fetch fetch_time: %ss ago '
+                          'hook_time: %ss ago',
+                          self.name, int(t0 - fetch_time),
+                          int(t0 - dt2time(self.hook_time)))
             return
 
         self.git(['gc', '--auto', '--prune=all'])

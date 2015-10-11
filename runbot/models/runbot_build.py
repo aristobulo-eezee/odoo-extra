@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 
+import openerp
 from openerp import models, fields, api, _
 from openerp.tools import config, appdirs, DEFAULT_SERVER_DATETIME_FORMAT, ustr
 
@@ -25,6 +26,10 @@ _logger = logging.getLogger(__name__)
 _re_error = r'^(?:\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d{3} \d+ (?:ERROR|CRITICAL) )|(?:Traceback \(most recent call last\):)$'
 _re_warning = r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d{3} \d+ WARNING '
 _re_job = re.compile('job_\d')
+
+# monkey patch cron system to reduce starvation and improve throughput with
+# many workers
+openerp.service.server.SLEEP_INTERVAL = 4
 
 
 class RunbotBuild(models.Model):

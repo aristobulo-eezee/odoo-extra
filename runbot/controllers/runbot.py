@@ -140,9 +140,11 @@ class RunbotController(http.Controller):
 
         return request.render("runbot.repo", context)
 
-    @http.route(['/runbot', '/runbot/hook/<repo_id:int>'],
+    @http.route(['/runbot/hook/<repo_id:int>'],
                 type='http', auth="public", website=True)
     def repo(self, repo_id=None, **post):
+        # TODO: if repo_id == None parse the json['repository']['ssh_url']
+        # and find the right repo
         repo = request.env['runbot.repo'].sudo().browse(repo_id)
         repo.hook_time = Datetime.now()
         return ""
