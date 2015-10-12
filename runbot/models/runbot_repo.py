@@ -281,7 +281,7 @@ class RunbotRepo(models.Model):
         # terminate and reap doomed build
         builds = Build.search(domain_host + [('state', '=', 'running')])
         # sort builds: the last build of each sticky branch then the rest
-        sticky = builds.filtered(lambda b: b.sticky is True).sorted(
+        sticky = builds.filtered(lambda b: b.branch_id.sticky is True).sorted(
             key=lambda r: r.id, reverse=True)
         non_sticky = (builds - sticky).sorted(key=lambda r: r.id, reverse=True)
         # terminate extra running builds
