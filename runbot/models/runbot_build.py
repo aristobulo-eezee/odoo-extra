@@ -376,7 +376,7 @@ class RunbotBuild(models.Model):
                 'modules': ','.join(modules_to_test)})
 
     def pg_dropdb(self, dbname):
-        run(['dropdb', dbname])
+        run(['dropdb',, '--if-exists', dbname])
         # cleanup filestore
         datadir = appdirs.user_data_dir()
         paths = [os.path.join(datadir, pn, 'filestore', dbname)
@@ -676,11 +676,11 @@ class RunbotBuild(models.Model):
             pid = None
             if build.state != 'done':
                 build.logger('running %s', build.job)
-                job_method = getattr(self, build.job)
+                job_method = getattr(build, build.job)
                 mkdirs([build.path('logs')])
                 lock_path = build.path('logs', '%s.lock' % build.job)
                 log_path = build.path('logs', '%s.txt' % build.job)
-                pid = job_method(build, lock_path, log_path)
+                pid = job_method(lock_path, log_path)
                 build.write({'pid': pid})
             # needed to prevent losing pids if multiple jobs are started
             # and one them raise an exception
