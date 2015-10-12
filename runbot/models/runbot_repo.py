@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+import openerp
 from openerp import models, fields, api, _
 from openerp.addons.runbot.tools.helpers import (
     fqdn, run, decode_utf, mkdirs, dt2time)
@@ -82,7 +83,8 @@ class RunbotRepo(models.Model):
     @api.model
     def root(self):
         """Return root directory of repository"""
-        default = os.path.join(os.path.dirname(__file__), 'static')
+        default = os.path.join(os.path.dirname(openerp.addons.runbot.__file__),
+                               'static')
         return self.env['ir.config_parameter'].get_param('runbot.root',
                                                          default)
 
