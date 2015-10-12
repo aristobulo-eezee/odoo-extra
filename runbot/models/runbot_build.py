@@ -588,36 +588,36 @@ class RunbotBuild(models.Model):
         """Force a rebuild
         :return runbot.repo record (used by controller at /build/<id>/force)
         """
-        for build in self:
-            domain = [('state', '=', 'pending')]
-            pending = self.search(domain, order='id', limit=1)
-            if pending:
-                sequence = pending.id
-            else:
-                sequence = self.search([], order='id desc', limit=1).id
+        self.ensure_one()
+        domain = [('state', '=', 'pending')]
+        pending = self.search(domain, order='id', limit=1)
+        if pending:
+            sequence = pending.id
+        else:
+            sequence = self.search([], order='id desc', limit=1).id
 
-            # Force it now
-            if build.state == 'done' and build.result == 'skipped':
-                values = {
-                    'state': 'pending',
-                    'sequence': sequence,
-                    'result': ''}
-                build.sudo().write(values)
-            # or duplicate it
-            elif build.state in ['running', 'done', 'duplicate']:
-                new_build = {
-                    'sequence': sequence,
-                    'branch_id': build.branch_id.id,
-                    'name': build.name,
-                    'author': build.author,
-                    'author_email': build.author_email,
-                    'committer': build.committer,
-                    'committer_email': build.committer_email,
-                    'subject': build.subject,
-                    'modules': build.modules,
-                }
-                self.sudo().create(new_build)
-        return build.repo_id
+        # Force it now
+        if self.state == 'done' and self.result == 'skipped':
+            values = {
+                'state': 'pending',
+                'sequence': sequence,
+                'result': ''}
+            self.sudo().write(values)
+        # or duplicate it
+        elif self.state in ['running', 'done', 'duplicate']:
+            new_build = {
+                'sequence': sequence,
+                'branch_id': self.branch_id.id,
+                'name': self.name,
+                'author': self.author,
+                'author_email': self.author_email,
+                'committer': self.committer,
+                'committer_email': self.committer_email,
+                'subject': self.subject,
+                'modules': self.modules,
+            }
+            self.sudo().create(new_build)
+        return self.repo_id
 
     @api.multi
     def schedule(self):
@@ -699,7 +699,8 @@ class RunbotBuild(models.Model):
     def skip(self):
         self.write({'state': 'done', 'result': 'skipped'})
         to_unduplicate = self.filtered(lambda b: b.duplicate_id is True)
-        to_unduplicate.force()
+        for build in to_unduplicate:
+            build.force()
 
     @api.multi
     def cleanup(self):
