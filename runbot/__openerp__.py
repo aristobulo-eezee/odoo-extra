@@ -18,6 +18,7 @@
         'views/runbot_branch_view.xml',
         'views/runbot_build_view.xml',
         'views/res_config_view.xml',
+        'data/runbot_data.xml',
     ],
     'installable': True,
 }
