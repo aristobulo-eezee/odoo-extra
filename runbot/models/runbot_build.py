@@ -376,7 +376,7 @@ class RunbotBuild(models.Model):
                 'modules': ','.join(modules_to_test)})
 
     def pg_dropdb(self, dbname):
-        run(['dropdb',, '--if-exists', dbname])
+        run(['dropdb', '--if-exists', dbname])
         # cleanup filestore
         datadir = appdirs.user_data_dir()
         paths = [os.path.join(datadir, pn, 'filestore', dbname)
